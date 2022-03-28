@@ -7,7 +7,7 @@ const app = express();
 // Models
 const User = require("../back /models/userModel");
 
-const secret = "5aJif0OZjepB63NRwyNSkk0czzttHKjXNQbEImrW";
+const secret = "TZbMladabXvKgceHxrS9tHMwx8hE58";
 
 // Middlewares
 app.use(express.json());
@@ -26,28 +26,36 @@ mongoose
 	});
 
 // Routes
-app.post("/register", async (req, res) => {
+app.post("/signup", async (req, res) => {
 	// if (req.body.password.length < 6) {
 	// 	return res.status(400).json({
 	// 		message: "Invalid data",
 	// 	});
 	// }
-
+    if (req.body.confirmPassword != req.body.password ){
+        return res.status(400).json({
+        message: "Confirmation password does not match",
+    });
+    }   
 	// 1 - Hasher le mot de passe
 	const hashedPassword = await bcrypt.hash(req.body.password, 12);
+    const hashedConfirmPassword = await bcrypt.hash(req.body.confirmPassword, 12);
 
 	// 2 - Créer un utilisateur
 	try {
 		await User.create({
 			email: req.body.email,
-			password: hashedPassword,
+            password: hashedPassword,
+            confirmPassword: hashedConfirmPassword,
+            firstName: req.body.firstName,
+            surName: req.body.surName,
+            dateOfBirth: req.body.dateOfBirth,
 		});
 	} catch (err) {
 		return res.status(400).json({
 			message: "This account already exists",
 		});
 	}
-
 	res.status(201).json({
 		message: `User ${req.body.email} created`,
 	});
@@ -73,7 +81,6 @@ app.post("/login", async (req, res) => {
 			message: "Invalid email or password",
 		});
 	}
-
 	// 3 - Générer un token
 	const token = jwt.sign({ id: user._id }, secret);
 
@@ -86,22 +93,26 @@ app.post("/login", async (req, res) => {
 	});
 });
 
-app.get("/users", (req, res) => {
+app.get("/admin", async (req, res) => {
 	// 1 - Vérifier le token qui est dans le cookie
 	let data;
+    let users;
 	try {
 		data = jwt.verify(req.cookies.jwt, secret);
+        users= await User.find();
 	} catch (err) {
 		return res.status(401).json({
 			message: "Your token is not valid",
 		});
 	}
-
 	// L'utilisateur est authentifié/autorisé
 	res.json({
-		message: "Votre requête a été acceptée",
-		data,
-	});
+        message: "Your token is valid",
+        data,
+        users
+    }
+
+	);
 });
 
 // Start server
