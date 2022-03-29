@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const app = express();
 // Models
@@ -12,6 +13,11 @@ const secret = "TZbMladabXvKgceHxrS9tHMwx8hE58";
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+	origin:"http://localhost:3000",
+	credential: true,
+})
+);
 
 // Connexion à MongoDB
 mongoose
